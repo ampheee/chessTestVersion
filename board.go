@@ -1,3 +1,5 @@
+//go:generate fyne bundle -o bundledBoard.go assets/cells
+
 package main
 
 import (

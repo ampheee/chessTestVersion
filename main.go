@@ -20,14 +20,13 @@ func main() {
 	over := canvas.NewImageFromResource(nil)
 	over.FillMode = canvas.ImageFillContain
 	over.Hide()
-	bg := canvas.NewRectangle(color.Gray{Y: 0x7A})
-	mainPage.SetContent(container.NewMax(bg, grid, container.NewWithoutLayout(over)))
+	mainPage.SetContent(container.NewMax(grid, container.NewWithoutLayout(over)))
 	mainPage.Resize(fyne.NewSize(480, 480))
 	mainPage.SetFixedSize(true)
 	go func() {
 		rand.Seed(time.Now().Unix())
 		for game.Outcome() == chess.NoOutcome {
-			time.Sleep(time.Millisecond * 300)
+			time.Sleep(time.Millisecond * 500)
 			moves := game.ValidMoves()
 			mv := moves[rand.Intn(len(moves))]
 			move(mv, game, grid, over)
@@ -41,14 +40,16 @@ func createGrid(board *chess.Board) *fyne.Container {
 	//fill in background of grid. color settings
 	for y := 7; y >= 0; y-- {
 		for x := 0; x < 8; x++ {
-			cell := canvas.NewRectangle(color.Gray{Y: 0xda})
+			cell := canvas.NewRectangle(color.NRGBA{R: 0xF4, G: 0xE2, B: 0xB6, A: 0xFF})
+			effect := canvas.NewImageFromResource(resourceWood1Png)
 			if x%2 == y%2 {
 				cell.FillColor = color.Gray{Y: 0x52}
+				effect = canvas.NewImageFromResource(resourceWood2Png)
 			}
 			p := board.Piece(chess.Square(x + y*8))
 			figure := canvas.NewImageFromResource(resourceForPiece(p))
 			figure.FillMode = canvas.ImageFillContain
-			cells = append(cells, container.NewMax(cell, figure))
+			cells = append(cells, container.NewMax(cell, effect, figure))
 		}
 	}
 	return container.New(&boardLayout{}, cells...)
@@ -58,7 +59,7 @@ func refreshGrid(grid *fyne.Container, board *chess.Board) {
 	y, x := 7, 0
 	for _, cell := range grid.Objects {
 		p := board.Piece(chess.Square(x + y*8))
-		img := cell.(*fyne.Container).Objects[1].(*canvas.Image)
+		img := cell.(*fyne.Container).Objects[2].(*canvas.Image)
 		img.Resource = resourceForPiece(p)
 		img.Refresh()
 		x += 1
@@ -72,7 +73,7 @@ func refreshGrid(grid *fyne.Container, board *chess.Board) {
 func move(mv *chess.Move, game *chess.Game, grid *fyne.Container, over *canvas.Image) {
 	off := squareToOff(mv.S1())
 	cell := grid.Objects[off].(*fyne.Container)
-	img := cell.Objects[1].(*canvas.Image)
+	img := cell.Objects[2].(*canvas.Image)
 	pos1 := cell.Position()
 
 	over.Resource = img.Resource
@@ -87,12 +88,12 @@ func move(mv *chess.Move, game *chess.Game, grid *fyne.Container, over *canvas.I
 	cell = grid.Objects[off].(*fyne.Container)
 	pos2 := cell.Position()
 
-	a := canvas.NewPositionAnimation(pos1, pos2, time.Millisecond*300, func(p fyne.Position) {
+	a := canvas.NewPositionAnimation(pos1, pos2, time.Millisecond*500, func(p fyne.Position) {
 		over.Move(p)
 		over.Refresh()
 	})
 	a.Start()
-	time.Sleep(time.Millisecond * 350)
+	time.Sleep(time.Millisecond * 480)
 	err := game.Move(mv)
 	if err != nil {
 		log.Printf("error! %s", err)
